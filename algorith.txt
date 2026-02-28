@@ -1,0 +1,33 @@
+ALGORITHM: Movement Detection and SMS Alert System
+
+1. Initialize System
+   - Power ON ESP32
+   - Initialize MPU6050
+   - Set GPS = OFF
+   - Set GSM = OFF
+   - Store initial orientation and acceleration baseline
+   - Store reference GPS coordinates (if available)
+
+2. Monitoring Mode
+   - Continuously read MPU6050 tilt and acceleration data
+   - Compare with predefined movement thresholds
+
+3. If Movement Detected
+   - Start 10-second delay (stabilization period)
+
+4. After 10 Seconds
+   - Power ON GPS module
+   - Read current GPS coordinates
+
+5. Compare Location
+   - Calculate distance between current and reference coordinates
+   - If distance exceeds allowed threshold:
+       → Power ON GSM module
+       → Send SMS with new location
+
+6. After SMS Sent Successfully
+   - Power OFF GSM module
+   - Power OFF GPS module
+
+7. Return to Monitoring Mode
+   - Repeat from Step 2
