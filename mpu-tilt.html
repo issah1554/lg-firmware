@@ -1,0 +1,199 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>MPU6050 Tilt Viewer (Web Serial)</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            margin: 24px;
+        }
+
+        .row {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 10px 14px;
+            cursor: pointer;
+        }
+
+        #status {
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        .stage {
+            width: 320px;
+            height: 320px;
+            display: grid;
+            place-items: center;
+            perspective: 900px;
+            border: 1px solid #eee;
+            border-radius: 16px;
+            margin-top: 18px;
+        }
+
+        .cube {
+            width: 140px;
+            height: 140px;
+            transform-style: preserve-3d;
+            transition: transform 40ms linear;
+        }
+
+        .face {
+            position: absolute;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            font-weight: 700;
+            border: 2px solid rgba(0, 0, 0, .15);
+            background: rgba(100, 150, 255, .20);
+            backface-visibility: hidden;
+        }
+
+        .front {
+            transform: translateZ(70px);
+        }
+
+        .back {
+            transform: rotateY(180deg) translateZ(70px);
+        }
+
+        .right {
+            transform: rotateY(90deg) translateZ(70px);
+        }
+
+        .left {
+            transform: rotateY(-90deg) translateZ(70px);
+        }
+
+        .top {
+            transform: rotateX(90deg) translateZ(70px);
+        }
+
+        .bot {
+            transform: rotateX(-90deg) translateZ(70px);
+        }
+
+        .vals {
+            margin-top: 14px;
+        }
+
+        code {
+            background: #f6f6f6;
+            padding: 2px 6px;
+            border-radius: 6px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="row">
+        <button id="connect">Connect ESP32</button>
+        <div id="status">Disconnected</div>
+    </div>
+
+    <div class="stage">
+        <div class="cube" id="cube">
+            <div class="face front">FRONT</div>
+            <div class="face back">BACK</div>
+            <div class="face right">RIGHT</div>
+            <div class="face left">LEFT</div>
+            <div class="face top">TOP</div>
+            <div class="face bot">BOTTOM</div>
+        </div>
+    </div>
+
+    <div class="vals">
+        Roll: <code id="roll">0.00</code>° &nbsp;&nbsp;
+        Pitch: <code id="pitch">0.00</code>°
+    </div>
+
+    <p style="margin-top:10px;color:#444;">
+        Notes: Works in Chrome/Edge. Click “Connect ESP32” and select the serial port.
+    </p>
+
+    <script>
+        const btn = document.getElementById('connect');
+        const statusEl = document.getElementById('status');
+        const cube = document.getElementById('cube');
+        const rollEl = document.getElementById('roll');
+        const pitchEl = document.getElementById('pitch');
+
+        let port, reader;
+        let keepReading = false;
+
+        function setStatus(t) { statusEl.textContent = t; }
+
+        function applyTilt(roll, pitch) {
+            // CSS: rotateX is pitch, rotateY is roll (swap if you prefer)
+            cube.style.transform = `rotateX(${pitch}deg) rotateY(${roll}deg)`;
+            rollEl.textContent = roll.toFixed(2);
+            pitchEl.textContent = pitch.toFixed(2);
+        }
+
+        async function readLoop() {
+            const decoder = new TextDecoder();
+            let buf = "";
+
+            while (keepReading) {
+                const { value, done } = await reader.read();
+                if (done) break;
+                buf += decoder.decode(value, { stream: true });
+
+                let lines = buf.split("\n");
+                buf = lines.pop();
+
+                for (const lineRaw of lines) {
+                    const line = lineRaw.trim();
+                    if (!line || line === "ROLL,PITCH") continue;
+                    const parts = line.split(",");
+                    if (parts.length !== 2) continue;
+
+                    const r = parseFloat(parts[0]);
+                    const p = parseFloat(parts[1]);
+                    if (Number.isFinite(r) && Number.isFinite(p)) {
+                        applyTilt(r, p);
+                    }
+                }
+            }
+        }
+
+        btn.addEventListener('click', async () => {
+            try {
+                if (!('serial' in navigator)) {
+                    setStatus("Web Serial not supported (use Chrome/Edge).");
+                    return;
+                }
+
+                port = await navigator.serial.requestPort();
+                await port.open({ baudRate: 115200 });
+
+                keepReading = true;
+                reader = port.readable.getReader();
+                setStatus("Connected");
+
+                readLoop();
+            } catch (e) {
+                setStatus("Failed: " + e.message);
+            }
+        });
+
+        window.addEventListener('beforeunload', async () => {
+            try {
+                keepReading = false;
+                if (reader) { await reader.cancel(); reader.releaseLock(); }
+                if (port) await port.close();
+            } catch { }
+        });
+    </script>
+</body>
+
+</html>

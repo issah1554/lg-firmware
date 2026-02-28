@@ -1,0 +1,17 @@
+Column 1        Column 2
+-------------------------
+D23             EN
+D22             VP
+TX0             VN
+RX0             D34
+D21             D35
+D19             D32
+D18             D33
+D5              D25
+D17             D26
+D16             D27
+D4              D14
+D2              D12
+D15             D13
+GND             GND
+3V3             VIN

@@ -1,0 +1,111 @@
+==============================
+SIM800L / GSM AT COMMANDS
+==============================
+
+GENERAL / BASIC
+---------------
+AT                  → Test communication (expect: OK)
+ATE0                → Disable echo
+ATE1                → Enable echo
+ATI                 → Show module information
+AT+GMR              → Show firmware version
+AT&W                → Save settings to memory
+AT+IPR=9600         → Set fixed baud rate
+AT+CMEE=2           → Enable verbose error messages
+
+
+SIM CARD STATUS
+---------------
+AT+CPIN?            → Check SIM status (READY / SIM PIN)
+AT+CPIN="1234"      → Enter SIM PIN
+AT+CCID             → Read SIM card number (ICCID)
+AT+CIMI             → Read IMSI
+
+
+NETWORK / REGISTRATION
+----------------------
+AT+CSQ              → Check signal strength (0–31, 99=no signal)
+AT+CREG?            → Check network registration (1=home, 5=roaming)
+AT+CREG=2           → Enable detailed registration reports
+AT+CGREG?           → Check GPRS registration
+AT+COPS?            → Show current operator
+AT+COPS=?           → List available operators (slow)
+AT+COPS=0           → Automatic operator selection
+AT+CFUN?            → Check functionality level
+AT+CFUN=1           → Full functionality
+
+
+SMS (TEXT MODE)
+---------------
+AT+CMGF=1           → Set SMS to text mode
+AT+CMGS="+123456789" → Send SMS (end message with Ctrl+Z)
+AT+CMGL="ALL"       → List all SMS
+AT+CMGR=1           → Read SMS at index 1
+AT+CMGD=1           → Delete SMS at index 1
+AT+CMGD=1,4         → Delete all SMS
+
+
+CALLS
+-----
+ATD+123456789;      → Dial number
+ATA                 → Answer incoming call
+ATH                 → Hang up
+AT+CLCC             → List current calls
+AT+CLIP=1           → Enable caller ID
+
+
+GPRS / INTERNET
+---------------
+AT+SAPBR=3,1,"CONTYPE","GPRS"
+                    → Set bearer type
+AT+SAPBR=3,1,"APN","your_apn"
+                    → Set APN
+AT+SAPBR=1,1        → Open bearer
+AT+SAPBR=2,1        → Query bearer status
+AT+HTTPINIT         → Initialize HTTP service
+AT+HTTPPARA="URL","http://example.com"
+                    → Set HTTP URL
+AT+HTTPACTION=0     → HTTP GET request
+AT+HTTPREAD         → Read HTTP response
+AT+HTTPTERM         → Close HTTP service
+
+
+POWER / SLEEP
+-------------
+AT+CSCLK=1          → Enable sleep mode
+AT+CSCLK=0          → Disable sleep
+AT+CPOWD=1          → Power down module
+
+
+BATTERY / STATUS
+----------------
+AT+CBC              → Battery voltage & charge status
+AT+GSN              → IMEI number
+
+
+FACTORY RESET
+-------------
+AT&F                → Restore factory settings
+
+
+==============================
+IMPORTANT REGISTRATION VALUES
+==============================
+
+CREG response meanings:
+0 → Not registered
+1 → Registered (home network)
+2 → Searching
+3 → Registration denied
+4 → Unknown
+5 → Registered (roaming)
+
+CSQ signal levels:
+0–9     → Very weak
+10–15   → Weak
+16–31   → Good
+99      → No signal
+
+==============================
+END OF FILE
+==============================
